@@ -1,0 +1,22 @@
+{
+  "name": "derby-page-loader",
+  "version": "0.0.1",
+  "description": "derby-page-loader =================",
+  "main": "index.js",
+  "directories": {
+    "example": "example"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/plasticut/derby-page-loader.git"
+  },
+  "author": "plasticut <plasticut@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/plasticut/derby-page-loader/issues"
+  },
+  "homepage": "https://github.com/plasticut/derby-page-loader"
+}
