@@ -1,7 +1,6 @@
 function defaultSetup(module, app) {
     app.get(module.href, function(page, model, params, next) {
-        page.renderClient();
-        page.renderServer();
+        page.renderAll();
     });
 }
 
@@ -25,47 +24,51 @@ function loadPage(module, parent) {
     for (i=0, l=modules.length; i<l; i++) {
         module = modules[i];
 
-        cls = module.cls;
+        if (module.cls) {
+            cls = module.cls;
 
-        module.name = cls.name.toLowerCase();
-        module.parent = parent;
-        module.pages = {};
-        module.getPage = getPage;
-        module.getHref = getHref;
+            module.name = cls.name.toLowerCase();
+            module.parent = parent;
+            module.pages = {};
+            module.getPage = getPage;
+            module.getHref = getHref;
 
-        if (parent) {
-            parent.pages[module.name] = module;
-            module.ns = parent.ns + ':' + module.name;
-            if (!module.href) {
-                module.href = ((parent.href !== '/') ? parent.href : '') + '/' + module.name;
+            if (parent) {
+                parent.pages[module.name] = module;
+                module.ns = parent.ns + ':' + module.name;
+                if (!module.href) {
+                    module.href = ((parent.href !== '/') ? parent.href : '') + '/' + module.name;
+                }
+            } else {
+                this.pages[module.name] = module;
+                module.ns = module.name;
+                if (!module.href) {
+                    module.href = '/' + module.name;
+                }
             }
+
+            cls.prototype.name = module.ns;
+            cls.prototype.view = module.dirname;
+
+            this.component(cls);
+
+            this.module = module;
+            if (module.setup) {
+                module.setup(this);
+            } else {
+                defaultSetup(module, this);
+            }
+            delete this.module;
         } else {
-            this.pages[module.name] = module;
-            module.ns = module.name;
-            if (!module.href) {
-                module.href = '/' + module.name;
+            if (module.setup) {
+                module.setup(this);
             }
         }
-
-        cls.prototype.name = module.ns;
-        cls.prototype.view = module.dirname;
-        cls.prototype.style = module.dirname;
-
-        this.component(cls);
-
-        this.module = module;
-        if (module.setup) {
-            module.setup(this);
-        } else {
-            defaultSetup(module, this);
-        }
-        delete this.module;
 
         if (module.imports) {
             this.loadPage(module.imports, module);
         }
     }
-
 }
 
 function empty() {

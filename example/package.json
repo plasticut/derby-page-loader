@@ -8,9 +8,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "derby-starter": "~0.2.0",
-    "derby": "~0.6.0-alpha11"
+    "derby-stylus": "~0.1.0",
+    "derby": "~0.6.0-alpha23"
   }
 }
