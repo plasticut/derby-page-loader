@@ -46,7 +46,7 @@ function Page(options, parent, app) {
     this.name = component ? options.name.toLowerCase() : '';
     this.ns = (parent && parent.ns ? (parent.ns + ':') : '') + this.name;
 
-    var href = this.href || this.name;
+    href = this.href || this.name;
 
     this.href = ((href[0] === '/') ? href : ((parent && parent.href ? ((parent.href !== '/') ? parent.href : '') : '') + '/' + href));
 
@@ -55,6 +55,10 @@ function Page(options, parent, app) {
             page = new Page(this.imports[i], this, app);
             this.pages[page.name] = page;
         }
+    }
+
+    if (this.model) {
+        reg.models.push([ this.ns, this.model ]);
     }
 
     if (this.style) {
@@ -77,7 +81,6 @@ function Page(options, parent, app) {
             reg.views.push(this.view);
         }
     }
-
 }
 
 Page.prototype.getPage = function getPage(ns) {
@@ -120,19 +123,28 @@ Page.prototype.getPages = function(ns) {
     return pages;
 };
 
+Page.prototype.fn = function(name) {
+    return this.ns + '.' + name;
+};
+
 Page.prototype.setup = function(app) {
     app.get(this.href, function(page, model, params, next) {
         page.renderAll();
     });
 };
 
+Page.prototype.attachTo = function(page) {
+    page.thisPage = this;
+};
+
 function setup(app, options) {
 
     var reg = {
-        styles: [],
-        components: [],
+        setup: [],
         views: [],
-        setup: []
+        styles: [],
+        models: [],
+        components: []
     };
     var i, l, item, items;
 
@@ -142,7 +154,19 @@ function setup(app, options) {
         items = options.components;
         for (i=0, l=items.length; i<l; i++) {
             item = items[i];
-            item.prototype.name = item.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();;
+            item.prototype.name = item.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+            if (item.exports) {
+                if (item.exports.model) {
+                    reg.models.push([item.prototype.name, item.exports.model]);
+                }
+                if (item.exports.style) {
+                    reg.styles.push(item.exports.style);
+                }
+                if (item.exports.view) {
+                    item.prototype.view = item.exports.view;
+                }
+            }
+
             reg.components.push(item);
         }
     }
@@ -172,17 +196,36 @@ function setup(app, options) {
         app[method] = function(pattern, callback) {
             var thisPage = this.thisPage;
             var _callback = function(page) {
-                page.thisPage = thisPage;
+                thisPage.attachTo(page);
                 callback.apply(this, arguments);
             };
             return this['orig_' + method].call(this, pattern, _callback);
-        }
+        };
     });
 
     app.on('ready', function(page) {
-        var ns = page.model.get('$render.ns');
-        page.thisPage = page.app.rootPage.getPage(ns);
+        var thisPage = page.app.rootPage;
+        thisPage = thisPage && thisPage.getPage(page.model.get('$render.ns'));
+        if (thisPage) {
+            thisPage.attachTo(page);
+        }
     });
+
+    // REGISTER MODEL FUNCTIONS
+    if (reg.models.length) {
+        app.on('model', function(model) {
+            var i, l, items = reg.models, fns, ns;
+            for (i=0, l=items.length; i<l; i++) {
+                ns = items[i][0];
+                fns = items[i][1];
+                for (var key in fns) {
+                    if (fns.hasOwnProperty(key)) {
+                        model.fn(ns + '.' + key, fns[key]);
+                    }
+                }
+            }
+        });
+    }
 
     items = reg.setup;
     for (i=0, l=items.length; i<l; i++) {
