@@ -1,19 +1,23 @@
 derby-page-loader
 =================
 
+Sample page
 ```javascript
+/* global __dirname */
+
 function Page1() {}
 
-module.exports = {
-    href: '/',
-    dirname: __dirname,
-    cls: Page1,
-    imports: [
-        require('./sub')
-    ]
-};
+module.exports = Page1;
 
-module.exports.setup = function(app) {
+Page1.view = __dirname;
+Page1.style = __dirname;
+Page1.href = '/';
+Page1.imports = [
+    require('./sub1'),
+    require('./sub2')
+];
+Page1.setup = function(app) {
+
     app.get(this.href, function(page, model, params, next) {
         page.renderClient();
         $query = model.query('some_data', {});
@@ -22,11 +26,22 @@ module.exports.setup = function(app) {
             page.renderServer();
         });
     });
+
 };
 
 Page1.prototype.create = function(model, dom) {
 };
 
+```
+
+```javascript
+app.use(require('derby-page-loader'), {
+    mainPage: require('./pages'),
+    components: [
+        require('./components/sample')
+    ],
+    importStyle: __dirname + '/../styles/import.styl'
+});
 ```
 
 ```javascript
