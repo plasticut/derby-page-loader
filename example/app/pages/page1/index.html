@@ -1,5 +1,5 @@
 <index:>
-    <h1>PAGE 1</h1>
+    <h2>{{getPage().name}}</h2>
 
 <!--     <modal as="testModal" on-hide="hideModal()">
         <title>Modal <i>town</i></title>
@@ -10,4 +10,10 @@
 
     <button on-click="openModal()">Open modal</button> -->
 
-    <a href="/sub">go sub</a>
+    <ul>
+    {{each getPages() as #page}}
+        <li>
+            <a href="{{#page.href}}">go to {{#page.name}}</a>
+        </li>
+    {{/each}}
+    </ul>

@@ -2,18 +2,16 @@
 
 function Page1() {}
 
-var define = {
-    href: '/',
-    dirname: __dirname,
-    cls: Page1,
-    imports: [
-        require('./sub')
-    ]
-};
+module.exports = Page1;
 
-module.exports = define;
-
-define.setup = function(app) {
+Page1.view = __dirname;
+// Page1.style = __dirname;
+Page1.href = '/';
+Page1.imports = [
+    require('./sub1'),
+    require('./sub2')
+];
+Page1.setup = function(app) {
 
     app.get(this.href, function(page, model, params, next) {
         page.renderAll();

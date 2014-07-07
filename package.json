@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/plasticut/derby-page-loader/issues"
   },
-  "homepage": "https://github.com/plasticut/derby-page-loader"
+  "homepage": "https://github.com/plasticut/derby-page-loader",
+  "dependencies": {
+    "chokidar": "~0.8.2"
+  }
 }

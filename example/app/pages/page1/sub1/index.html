@@ -1,0 +1,13 @@
+<index:>
+
+    <h2>{{getPage().name}}</h2>
+
+    <a href="/">go back</a>
+
+    <ul>
+    {{each getPages() as #page}}
+        <li>
+            <a href="{{#page.href}}">go to {{#page.name}}</a>
+        </li>
+    {{/each}}
+    </ul>

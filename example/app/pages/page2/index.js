@@ -2,14 +2,12 @@
 
 function Page2() {}
 
-var define = {
-    dirname: __dirname,
-    cls: Page2
-};
+module.exports = Page2;
 
-module.exports = define;
+Page2.view = __dirname;
+Page2.style = __dirname;
 
-define.setup = function(app) {
+Page2.setup = function(app) {
 
     app.get(this.href, function(page, model, params, next) {
         page.renderAll();
