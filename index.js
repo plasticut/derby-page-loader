@@ -1,11 +1,3 @@
-
-/**
-    PAGE COMPONENT
-*/
-
-function PageComponent() {
-}
-
 function extend(from, to) {
     for (var key in from) {
         if (from.hasOwnProperty(key)) {
@@ -14,10 +6,12 @@ function extend(from, to) {
     }
 }
 
-PageComponent.extend = function(Ancestor) {
-    extend(PageComponent.prototype, Ancestor.prototype);
-    return Ancestor;
-};
+/**
+    PAGE COMPONENT
+*/
+
+function PageComponent() {
+}
 
 PageComponent.prototype.getPage = function(ns) {
     return this.page.thisPage.getPage(ns);
@@ -35,52 +29,55 @@ PageComponent.prototype.getParent = function() {
     return this.page.thisPage.getParent();
 };
 
-
 /**
     PAGE
 */
 
 function Page(options, parent, app) {
-    var reg = app.__reg;
+    var page, i, l, href,
+        reg = app.__reg,
+        component = (typeof options === 'function') && options;
+
+    extend(options.exports, this);
+
     this.app = app;
     this.pages = {};
-    this.name = options.name ? options.name.toLowerCase() : 'main';
+
+    this.name = component ? options.name.toLowerCase() : '';
     this.ns = (parent && parent.ns ? (parent.ns + ':') : '') + this.name;
 
-    var href = options.href || this.name;
+    var href = this.href || this.name;
 
     this.href = ((href[0] === '/') ? href : ((parent && parent.href ? ((parent.href !== '/') ? parent.href : '') : '') + '/' + href));
 
-    if (options.imports) {
-        for (var i=0, l=options.imports.length; i<l; i++) {
-            var page = new Page(options.imports[i], this, app);
+    if (this.imports) {
+        for (i=0, l=this.imports.length; i<l; i++) {
+            page = new Page(this.imports[i], this, app);
             this.pages[page.name] = page;
         }
     }
 
-    if (options.style) {
-        reg.styles.push(options.style);
-        delete options.style;
+    if (this.style) {
+        reg.styles.push(this.style);
     }
 
-    if (options.setup) {
-        this.setup = options.setup;
-        delete options.setup;
+    if (this.setup) {
+        reg.setup.push(this);
     }
-    reg.setup.push(this);
-
-    var component = (typeof options === 'function') && options;
 
     if (component) {
+        delete options.exports;
+
         component.prototype.name = this.ns;
-        component.prototype.view = options.view;
-        delete options.view;
-        reg.components.push(PageComponent.extend(component));
+        component.prototype.view = this.view;
+        extend(PageComponent.prototype, component.prototype);
+        reg.components.push(component);
     } else {
-        if (options.view) {
-            reg.views.push(options.view);
+        if (this.view) {
+            reg.views.push(this.view);
         }
     }
+
 }
 
 Page.prototype.getPage = function getPage(ns) {
@@ -103,7 +100,7 @@ Page.prototype.getPage = function getPage(ns) {
 Page.prototype.getParent = function getParent() {
     var ns = this.ns.split(':');
     ns.pop();
-    return this.app.mainPage.getPage(ns.join(':'));
+    return this.app.rootPage.getPage(ns.join(':'));
 };
 
 Page.prototype.getHref = function getHref(path) {
@@ -150,9 +147,8 @@ function setup(app, options) {
         }
     }
 
-    if (options.mainPage) {
-        app.mainPage = new Page(options.mainPage, null, app);
-        app.proto.mainPage = app.mainPage;
+    if (options.root) {
+        app.rootPage = new Page({ exports: options.root }, null, app);
     }
 
     items = reg.components;
@@ -185,7 +181,7 @@ function setup(app, options) {
 
     app.on('ready', function(page) {
         var ns = page.model.get('$render.ns');
-        page.thisPage = page.app.mainPage.getPage(ns);
+        page.thisPage = page.app.rootPage.getPage(ns);
     });
 
     items = reg.setup;
@@ -214,11 +210,11 @@ function setup(app, options) {
     };
 
     app.proto.getPages = function(ns) {
-        return app.mainPage.getPages(ns);
+        return app.rootPage.getPages(ns);
     };
 
     app.proto.getPage = function(ns) {
-        return app.mainPage.getPage(ns);
+        return app.rootPage.getPage(ns);
     };
 
     delete app.__reg;

@@ -9,14 +9,16 @@ function Page1() {}
 
 module.exports = Page1;
 
-Page1.view = __dirname;
-Page1.style = __dirname;
-Page1.href = '/';
-Page1.imports = [
-    require('./sub1'),
-    require('./sub2')
-];
-Page1.setup = function(app) {
+Page1.exports = {
+    view: __dirname,
+    style: __dirname,
+    href: '/',
+    imports: [
+        require('./sub1'),
+        require('./sub2')
+    ]
+};
+Page1.exports.setup = function(app) {
 
     app.get(this.href, function(page, model, params, next) {
         page.renderClient();
@@ -36,7 +38,7 @@ Page1.prototype.create = function(model, dom) {
 
 ```javascript
 app.use(require('derby-page-loader'), {
-    mainPage: require('./pages'),
+    rootPage: require('./pages'),
     components: [
         require('./components/sample')
     ],

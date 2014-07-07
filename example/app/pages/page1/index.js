@@ -4,19 +4,19 @@ function Page1() {}
 
 module.exports = Page1;
 
-Page1.view = __dirname;
-// Page1.style = __dirname;
-Page1.href = '/';
-Page1.imports = [
-    require('./sub1'),
-    require('./sub2')
-];
-Page1.setup = function(app) {
-
-    app.get(this.href, function(page, model, params, next) {
-        page.renderAll();
-    });
-
+Page1.exports = {
+    view: __dirname,
+    //style: __dirname,
+    href: '/',
+    imports: [
+        require('./sub1'),
+        require('./sub2')
+    ],
+    setup: function(app) {
+        app.get(this.href, function(page, model, params, next) {
+            page.renderAll();
+        });
+    }
 };
 
 Page1.prototype.create = function() {
