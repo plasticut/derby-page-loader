@@ -4,7 +4,7 @@ var app = module.exports = derby.createApp('derby-app', __filename);
 app.serverUse(module, 'derby-stylus');
 
 app.use(require('../../index.js'), {
-    root: require('./pages'),
+    rootPage: require('./pages'),
     components: [
         require('./components/sample')
     ],

@@ -147,8 +147,8 @@ function setup(app, options) {
         }
     }
 
-    if (options.root) {
-        app.rootPage = new Page({ exports: options.root }, null, app);
+    if (options.rootPage) {
+        app.rootPage = new Page({ exports: options.rootPage }, null, app);
     }
 
     items = reg.components;
