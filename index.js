@@ -50,13 +50,6 @@ function Page(options, parent, app) {
 
     this.href = ((href[0] === '/') ? href : ((parent && parent.href ? ((parent.href !== '/') ? parent.href : '') : '') + '/' + href));
 
-    if (this.imports) {
-        for (i=0, l=this.imports.length; i<l; i++) {
-            page = new Page(this.imports[i], this, app);
-            this.pages[page.name] = page;
-        }
-    }
-
     if (this.model) {
         reg.models.push([ this.ns, this.model ]);
     }
@@ -79,6 +72,13 @@ function Page(options, parent, app) {
     } else {
         if (this.view) {
             reg.views.push(this.view);
+        }
+    }
+
+    if (this.imports) {
+        for (i=0, l=this.imports.length; i<l; i++) {
+            page = new Page(this.imports[i], this, app);
+            this.pages[page.name] = page;
         }
     }
 }
