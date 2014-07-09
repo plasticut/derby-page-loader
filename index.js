@@ -6,6 +6,10 @@ function extend(from, to) {
     }
 }
 
+function dash(s) {
+    return s.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+}
+
 /**
     PAGE COMPONENT
 */
@@ -43,7 +47,7 @@ function Page(options, parent, app) {
     this.app = app;
     this.pages = {};
 
-    this.name = component ? options.name.toLowerCase() : '';
+    this.name = component ? dash(options.name) : '';
     this.ns = (parent && parent.ns ? (parent.ns + ':') : '') + this.name;
 
     href = this.href || this.name;
@@ -170,7 +174,7 @@ function setup(app, options) {
         items = options.components;
         for (i=0, l=items.length; i<l; i++) {
             item = items[i];
-            item.prototype.name = item.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+            item.prototype.name = dash(item.name);
             if (item.exports) {
                 if (item.exports.model) {
                     reg.models.push([item.prototype.name, item.exports.model]);
