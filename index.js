@@ -62,6 +62,10 @@ function Page(options, parent, app) {
         reg.setup.push(this);
     }
 
+    if (this.middlewares) {
+        reg.middlewares.push(this.middlewares);
+    }
+
     if (component) {
         delete options.exports;
 
@@ -137,6 +141,17 @@ Page.prototype.attachTo = function(page) {
     page.thisPage = this;
 };
 
+function Middlewares() {
+}
+
+Middlewares.prototype.push = function(items) {
+    for (var key in items) {
+        if (items.hasOwnProperty(key)) {
+            this[key] = items[key];
+        }
+    }
+};
+
 function setup(app, options) {
 
     var reg = {
@@ -144,7 +159,8 @@ function setup(app, options) {
         views: [],
         styles: [],
         models: [],
-        components: []
+        components: [],
+        middlewares: new Middlewares()
     };
     var i, l, item, items;
 
@@ -190,14 +206,30 @@ function setup(app, options) {
         app.loadViews(items[i]);
     }
 
+    items = reg.middlewares;
+
     // extend router methods
     ['get', 'post', 'put', 'del'].forEach(function(method) {
         app['orig_' + method] = app[method];
-        app[method] = function(pattern, callback) {
-            var thisPage = this.thisPage;
-            var _callback = function(page) {
+        app[method] = function(pattern) {
+            var thisPage = this.thisPage, callbacks = [], fn;
+            for (var i=1, l=arguments.length; i<l; i++) {
+                fn = arguments[i];
+                if (typeof fn === 'string') {
+                    fn = reg.middlewares[fn];
+                }
+                callbacks.push(fn);
+            }
+            function _callback(page, model, params, next, done) {
                 thisPage.attachTo(page);
-                callback.apply(this, arguments);
+                var _callbacks = callbacks.slice(0);
+                function _next() {
+                    var cb = _callbacks.shift();
+                    if (cb) {
+                        cb.call(page, page, model, params, _callbacks.length ? _next : next, done);
+                    }
+                }
+                _next();
             };
             return this['orig_' + method].call(this, pattern, _callback);
         };
@@ -214,13 +246,14 @@ function setup(app, options) {
     // REGISTER MODEL FUNCTIONS
     if (reg.models.length) {
         app.on('model', function(model) {
-            var i, l, items = reg.models, fns, ns;
+            var i, l, items = reg.models, fns, ns, name;
             for (i=0, l=items.length; i<l; i++) {
                 ns = items[i][0];
                 fns = items[i][1];
                 for (var key in fns) {
                     if (fns.hasOwnProperty(key)) {
-                        model.fn(ns + '.' + key, fns[key]);
+                        name = ns ? (ns + '.' + key) : key;
+                        model.fn(name, fns[key]);
                     }
                 }
             }
