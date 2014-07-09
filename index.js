@@ -91,7 +91,7 @@ function Page(options, parent, app) {
     }
 }
 
-Page.prototype.getPage = function getPage(ns) {
+Page.prototype.getPage = function getPage(ns, fn) {
 
     if (!ns) {
         return this;
@@ -103,7 +103,7 @@ Page.prototype.getPage = function getPage(ns) {
 
     if (names[0] === this.name) { names.shift(); }
 
-    while (page = parent.pages[names[i++]]) { parent = page; }
+    while (page = parent.pages[names[i++]]) { parent = page; if (fn) { fn(page); } }
 
     return (i !== names.length) && parent;
 };
