@@ -178,7 +178,7 @@ function setup(app, options) {
         items = options.components;
         for (i=0, l=items.length; i<l; i++) {
             item = items[i];
-            item.prototype.name = dash(getName(item.name));
+            item.prototype.name = dash(getName(item));
             if (item.exports) {
                 if (item.exports.model) {
                     reg.models.push([item.prototype.name, item.exports.model]);
