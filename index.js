@@ -6,6 +6,10 @@ function extend(from, to) {
     }
 }
 
+function getName(func) {
+    return func.name || func.toString().match(/^function\s*([^\s(]+)/)[1];
+}
+
 function dash(s) {
     return s.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
 }
@@ -174,7 +178,7 @@ function setup(app, options) {
         items = options.components;
         for (i=0, l=items.length; i<l; i++) {
             item = items[i];
-            item.prototype.name = dash(item.name);
+            item.prototype.name = dash(getName(item.name));
             if (item.exports) {
                 if (item.exports.model) {
                     reg.models.push([item.prototype.name, item.exports.model]);
