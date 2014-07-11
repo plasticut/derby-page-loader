@@ -51,7 +51,7 @@ function Page(options, parent, app) {
     this.app = app;
     this.pages = {};
 
-    this.name = component ? dash(options.name) : '';
+    this.name = component ? dash(getName(options)) : '';
     this.ns = (parent && parent.ns ? (parent.ns + ':') : '') + this.name;
 
     href = this.href || this.name;
