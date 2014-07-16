@@ -11,7 +11,7 @@ function getName(func) {
 }
 
 function dash(s) {
-    return s.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+    return s.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
 /**
@@ -44,6 +44,7 @@ PageComponent.prototype.getParent = function() {
 function Page(options, parent, app) {
     var page, i, l, href,
         reg = app.__reg,
+        item,
         component = (typeof options === 'function') && options;
 
     extend(options.exports, this);
@@ -74,11 +75,18 @@ function Page(options, parent, app) {
         reg.middlewares.push(this.middlewares);
     }
 
+    if (this.components) {
+        for (i=0, l=this.components.length; i<l; i++) {
+            item = this.components[i];
+            item.prototype.name = this.ns + ':' + dash(getName(item));
+            reg.components.push(item);
+        }
+    }
+
     if (component) {
         delete options.exports;
 
         component.prototype.name = this.ns;
-        component.prototype.view = this.view;
         extend(PageComponent.prototype, component.prototype);
         reg.components.push(component);
     } else {
@@ -107,7 +115,12 @@ Page.prototype.getPage = function getPage(ns, fn) {
 
     if (names[0] === this.name) { names.shift(); }
 
-    while (page = parent.pages[names[i++]]) { parent = page; if (fn) { fn(page); } }
+    while (page = parent.pages[names[i++]]) {
+        parent = page;
+        if (fn) {
+            fn(page);
+        }
+    }
 
     return (i !== names.length) && parent;
 };
@@ -175,24 +188,7 @@ function setup(app, options) {
     app.__reg = reg;
 
     if (options.components) {
-        items = options.components;
-        for (i=0, l=items.length; i<l; i++) {
-            item = items[i];
-            item.prototype.name = dash(getName(item));
-            if (item.exports) {
-                if (item.exports.model) {
-                    reg.models.push([item.prototype.name, item.exports.model]);
-                }
-                if (item.exports.style) {
-                    reg.styles.push(item.exports.style);
-                }
-                if (item.exports.view) {
-                    item.prototype.view = item.exports.view;
-                }
-            }
-
-            reg.components.push(item);
-        }
+        reg.components = reg.components.concat(options.components);
     }
 
     if (options.rootPage) {
@@ -201,7 +197,22 @@ function setup(app, options) {
 
     items = reg.components;
     for (i=0, l=items.length; i<l; i++) {
-        app.component(items[i]);
+        item = items[i];
+        if (!item.prototype.name) {
+            item.prototype.name = dash(getName(item));
+        }
+        if (item.exports) {
+            if (item.exports.model) {
+                reg.models.push([item.prototype.name, item.exports.model]);
+            }
+            if (item.exports.style) {
+                reg.styles.push(item.exports.style);
+            }
+            if (item.exports.view) {
+                item.prototype.view = item.exports.view;
+            }
+        }
+        app.component(item);
     }
 
     if (reg.styles.length) {
@@ -238,7 +249,7 @@ function setup(app, options) {
                     }
                 }
                 _next();
-            };
+            }
             return this['orig_' + method].call(this, pattern, _callback);
         };
     });
