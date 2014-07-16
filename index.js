@@ -87,6 +87,7 @@ function Page(options, parent, app) {
         delete options.exports;
 
         component.prototype.name = this.ns;
+        component.prototype.view = this.view;
         extend(PageComponent.prototype, component.prototype);
         reg.components.push(component);
     } else {
