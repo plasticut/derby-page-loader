@@ -55,9 +55,9 @@ function Page(options, parent, app) {
     this.name = component ? dash(getName(options)) : '';
     this.ns = (parent && parent.ns ? (parent.ns + ':') : '') + this.name;
 
-    href = this.href || this.name;
+    href = (this.href === undefined) ? this.name : this.href;
 
-    this.href = ((href[0] === '/') ? href : ((parent && parent.href ? ((parent.href !== '/') ? parent.href : '') : '') + '/' + href));
+    this.href = ((href[0] === '/') ? href : ((parent && parent.href ? ((parent.href !== '/') ? parent.href : '') : '') + (href ? '/' + href : '') ));
 
     if (this.model) {
         reg.models.push([ this.ns, this.model ]);
