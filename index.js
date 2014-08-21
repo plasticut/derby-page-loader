@@ -1,10 +1,35 @@
-function extend(from, to) {
+function merge(from, to) {
     for (var key in from) {
         if (from.hasOwnProperty(key)) {
             to[key] = from[key];
         }
     }
 }
+
+function wrap(from, to, method) {
+    var child = to[method];
+    var parent = from[method];
+    return !child ? parent : function() {
+        parent.apply(this, arguments);
+        return child.apply(this, arguments);
+    };
+}
+
+function extend(Parent, Child, methods) {
+    var from = Parent.prototype;
+    var to = Child.prototype;
+
+    methods.forEach(function(name) {
+        to[name] = wrap(from, to, name);
+    });
+
+    for (var key in from) {
+        if (from.hasOwnProperty(key) && !to.hasOwnProperty(key)) {
+            to[key] = from[key];
+        }
+    }
+}
+
 
 function getName(func) {
     return func.name || func.toString().match(/^function\s*([^\s(]+)/)[1];
@@ -20,6 +45,12 @@ function dash(s) {
 
 function PageComponent() {
 }
+
+PageComponent.prototype.init = function(model) {
+    var thisPage = this.page.thisPage;
+
+    thisPage.init(model);
+};
 
 PageComponent.prototype.getPage = function(ns) {
     return this.page.thisPage.getPage(ns);
@@ -47,7 +78,7 @@ function Page(options, parent, app) {
         item,
         component = (typeof options === 'function') && options;
 
-    extend(options.exports, this);
+    merge(options.exports, this);
 
     this.app = app;
     this.pages = {};
@@ -88,7 +119,8 @@ function Page(options, parent, app) {
 
         component.prototype.name = this.ns;
         component.prototype.view = this.view;
-        extend(PageComponent.prototype, component.prototype);
+        extend(PageComponent, component, ['init']);
+
         reg.components.push(component);
     } else {
         if (this.view) {
@@ -159,8 +191,14 @@ Page.prototype.setup = function(app) {
     });
 };
 
+Page.prototype.init = function(model) {
+    model.set('_page.title', this.title || this.header);
+    model.set('_page.header', this.header || this.title);
+};
+
 Page.prototype.attachTo = function(page) {
     page.thisPage = this;
+    this.init(page.model);
 };
 
 function Middlewares() {
