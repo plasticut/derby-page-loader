@@ -52,17 +52,19 @@ PageComponent.prototype.init = function(model) {
     thisPage.init(model);
 };
 
-PageComponent.prototype.getPage = function(ns) {
-    return this.page.thisPage.getPage(ns);
-};
+// PageComponent.prototype.getPage = function(ns) {
+//     console.log('PAGE.GETPAGE', this.page.thisPage.ns, ns);
+//     return this.page.thisPage.getPage(ns);
+// };
 
-PageComponent.prototype.getHref = function(ns) {
-    return this.page.thisPage.getHref(ns);
-};
+// PageComponent.prototype.getHref = function(ns) {
+//     console.log('PAGE.GETHREF', this.page.thisPage.ns, ns);
+//     return this.page.thisPage.getHref(ns);
+// };
 
-PageComponent.prototype.getPages = function(ns) {
-    return this.page.thisPage.getPages(ns);
-};
+// PageComponent.prototype.getPages = function(ns) {
+//     return this.page.thisPage.getPages(ns);
+// };
 
 PageComponent.prototype.getParent = function() {
     return this.page.thisPage.getParent();
@@ -137,7 +139,6 @@ function Page(options, parent, app) {
 }
 
 Page.prototype.getPage = function getPage(ns, fn) {
-
     if (!ns) {
         return this;
     }
@@ -155,7 +156,7 @@ Page.prototype.getPage = function getPage(ns, fn) {
         }
     }
 
-    return (i !== names.length) && parent;
+    return (i > names.length) && parent;
 };
 
 Page.prototype.getParent = function getParent() {
@@ -164,9 +165,9 @@ Page.prototype.getParent = function getParent() {
     return this.app.rootPage.getPage(ns.join(':'));
 };
 
-Page.prototype.getHref = function getHref(path) {
+Page.prototype.getHref = function getHref(path, params, prev) {
     var page = this.getPage(path);
-    return page ? page.href : '/';
+    return page ? page.getFullHref(params, prev) : 'javascript:void(0)';
 };
 
 Page.prototype.getPages = function(ns) {
@@ -179,6 +180,33 @@ Page.prototype.getPages = function(ns) {
         }
     }
     return pages;
+};
+
+
+// base on func mapRoute from derby track module
+function fillParams(cur, params, prev) {
+    var i, qs;
+    if (prev) {
+        i = ~prev.indexOf('?');
+        qs = (~i) ? prev.slice(i) : '';
+    } else {
+        qs = '';
+    }
+
+    i = 0;
+    function doReplace(match, key, optional) {
+        var value = key ? params[key] : params[i++];
+        return (optional && value == null) ? '' : '/' + encodeURIComponent(value);
+    }
+    return cur.replace(/\/(?:(?:\:([^?\/:*(]+)(?:\([^)]+\))?)|\*)(\?)?/g, doReplace) + qs;
+}
+
+
+Page.prototype.getFullHref = function(params, prev) {
+    /**
+        TODO fill params in href with defaults and input values
+    */
+    return params ? fillParams(this.href, params, prev) : this.href;
 };
 
 Page.prototype.fn = function(name) {
@@ -344,12 +372,17 @@ function setup(app, options) {
     };
 
     app.proto.getPages = function(ns) {
-        return app.rootPage.getPages(ns);
+        return app.rootPage.getPages(ns || this.model.get('$render.ns'));
     };
 
     app.proto.getPage = function(ns) {
-        return app.rootPage.getPage(ns);
+        return app.rootPage.getPage(ns || this.model.get('$render.ns'));
     };
+
+    app.proto.getHref = function(ns, params, prev) {
+        return app.rootPage.getHref(ns || this.model.get('$render.ns'), params, prev);
+    };
+
 
     delete app.__reg;
 }
