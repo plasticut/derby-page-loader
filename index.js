@@ -182,6 +182,12 @@ Page.prototype.getPages = function(ns) {
     return pages;
 };
 
+Object.defineProperty(Page.prototype, "isEnabled", {
+    get: function() {
+        return this.filter && this.filter(app.rootPage.pageModel || app.model) || !this.filter;
+    }
+});
+
 
 // base on func mapRoute from derby track module
 function fillParams(cur, params, prev) {
@@ -220,8 +226,8 @@ Page.prototype.setup = function(app) {
 };
 
 Page.prototype.init = function(model) {
-    model.set('_page.title', this.title || this.header);
-    model.set('_page.header', this.header || this.title);
+    model.set('_page.title', this.title || this.shortTitle);
+    model.set('_page.shortTitle', this.shortTitle || this.title);
 };
 
 Page.prototype.attachTo = function(page) {
@@ -307,6 +313,8 @@ function setup(app, options) {
                 callbacks.push(fn);
             }
             function _callback(page, model, params, next, done) {
+                app.rootPage.pageModel = model;
+
                 thisPage.attachTo(page);
                 var _callbacks = callbacks.slice(0);
                 function _next() {
