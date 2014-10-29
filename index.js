@@ -166,11 +166,15 @@ var querystring = require('querystring');
 function fillParams(pattern, params) {
     var i, qs;
 
-    qs = params.query ? ('?' + querystring.stringify(params.query)) : '';
+    qs = params.query && querystring.stringify(params.query) || '';
+    if (qs) {
+        qs = '?' + qs;
+    }
+
     i = 0;
 
     function doReplace(match, key, optional) {
-        var value = key ? params[key] : params[i++];
+        var value = (key ? params[key] : params[i++]) || '';
         return (optional && value == null) ? '' : '/' + encodeURIComponent(value);
     }
     return pattern.replace(/\/(?:(?:\:([^?\/:*(]+)(?:\([^)]+\))?)|\*)(\?)?/g, doReplace) + qs;
@@ -178,12 +182,12 @@ function fillParams(pattern, params) {
 
 
 Page.prototype.getHref = function getHref(path, customParams) {
-    var page = this.getPage(path || '');
+    var page = this.getPage(path);
     if (page) {
 
         var params = {};
 
-        var renderParams = this.app.rootPage.pageModel.getDeepCopy('$render.params');
+        var renderParams = (this.app.model || this.app.rootPage.pageModel).get('$render.params');
 
         if (renderParams) {
             _.mergeInto(params, renderParams);
@@ -192,8 +196,9 @@ Page.prototype.getHref = function getHref(path, customParams) {
         if (customParams) {
             _.mergeInto(params, customParams);
         }
-
-        return fillParams(this.href, params);
+        var href = fillParams(page.href, params);
+        console.log('gethref', path, page.href, '>>', href);
+        return href;
     } else {
         return 'javascript:void(0)';
     }
