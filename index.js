@@ -1,10 +1,5 @@
-function merge(from, to) {
-    for (var key in from) {
-        if (from.hasOwnProperty(key)) {
-            to[key] = from[key];
-        }
-    }
-}
+
+var _ = require('derby').util;
 
 function wrap(from, to, method) {
     var child = to[method];
@@ -80,7 +75,7 @@ function Page(options, parent, app) {
         item,
         component = (typeof options === 'function') && options;
 
-    merge(options.exports, this);
+    _.mergeInto(this, options.exports);
 
     this.app = app;
     this.pages = {};
@@ -165,9 +160,43 @@ Page.prototype.getParent = function getParent() {
     return this.app.rootPage.getPage(ns.join(':'));
 };
 
-Page.prototype.getHref = function getHref(path, params, prev) {
-    var page = this.getPage(path);
-    return page ? page.getFullHref(params, prev) : 'javascript:void(0)';
+var querystring = require('querystring');
+
+// base on func mapRoute from derby track module
+function fillParams(pattern, params) {
+    var i, qs;
+
+    qs = params.query ? ('?' + querystring.stringify(params.query)) : '';
+    i = 0;
+
+    function doReplace(match, key, optional) {
+        var value = key ? params[key] : params[i++];
+        return (optional && value == null) ? '' : '/' + encodeURIComponent(value);
+    }
+    return pattern.replace(/\/(?:(?:\:([^?\/:*(]+)(?:\([^)]+\))?)|\*)(\?)?/g, doReplace) + qs;
+}
+
+
+Page.prototype.getHref = function getHref(path, customParams) {
+    var page = this.getPage(path || '');
+    if (page) {
+
+        var params = {};
+
+        var renderParams = this.app.rootPage.pageModel.getDeepCopy('$render.params');
+
+        if (renderParams) {
+            _.mergeInto(params, renderParams);
+        }
+
+        if (customParams) {
+            _.mergeInto(params, customParams);
+        }
+
+        return fillParams(this.href, params);
+    } else {
+        return 'javascript:void(0)';
+    }
 };
 
 Page.prototype.getPages = function(ns) {
@@ -187,33 +216,6 @@ Object.defineProperty(Page.prototype, "isEnabled", {
         return this.filter && this.filter(app.rootPage.pageModel || app.model) || !this.filter;
     }
 });
-
-
-// base on func mapRoute from derby track module
-function fillParams(cur, params, prev) {
-    var i, qs;
-    if (prev) {
-        i = ~prev.indexOf('?');
-        qs = (~i) ? prev.slice(i) : '';
-    } else {
-        qs = '';
-    }
-
-    i = 0;
-    function doReplace(match, key, optional) {
-        var value = key ? params[key] : params[i++];
-        return (optional && value == null) ? '' : '/' + encodeURIComponent(value);
-    }
-    return cur.replace(/\/(?:(?:\:([^?\/:*(]+)(?:\([^)]+\))?)|\*)(\?)?/g, doReplace) + qs;
-}
-
-
-Page.prototype.getFullHref = function(params, prev) {
-    /**
-        TODO fill params in href with defaults and input values
-    */
-    return params ? fillParams(this.href, params, prev) : this.href;
-};
 
 Page.prototype.fn = function(name) {
     return this.ns + '.' + name;
