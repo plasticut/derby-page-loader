@@ -47,20 +47,6 @@ PageComponent.prototype.init = function(model) {
     thisPage.init(model);
 };
 
-// PageComponent.prototype.getPage = function(ns) {
-//     console.log('PAGE.GETPAGE', this.page.thisPage.ns, ns);
-//     return this.page.thisPage.getPage(ns);
-// };
-
-// PageComponent.prototype.getHref = function(ns) {
-//     console.log('PAGE.GETHREF', this.page.thisPage.ns, ns);
-//     return this.page.thisPage.getHref(ns);
-// };
-
-// PageComponent.prototype.getPages = function(ns) {
-//     return this.page.thisPage.getPages(ns);
-// };
-
 PageComponent.prototype.getParent = function() {
     return this.page.thisPage.getParent();
 };
@@ -197,7 +183,6 @@ Page.prototype.getHref = function getHref(path, customParams) {
             _.mergeInto(params, customParams);
         }
         var href = fillParams(page.href, params);
-        console.log('gethref', path, page.href, '>>', href);
         return href;
     } else {
         return 'javascript:void(0)';
